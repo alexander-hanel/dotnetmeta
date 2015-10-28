@@ -707,19 +707,26 @@ def find_signature(dd, signature):
 
 
 def run(ff):
-    # TODO: save data as JSON
+    # TODO: save data as JSON. Can modify variable names and parse out all variable that contain "_"
     image_file_header = get_image_file_header(ff)
     if image_file_header:
         image_optional_header = get_image_optional_header(ff, image_file_header._offset)
-        # TODO verify image_optional_header is valid
+        if image_optional_header is None:
+            return None
         image_section_headers = []
         section_addr = image_optional_header.end
         for sections in range(0, image_file_header.NumberOfSections):
             image_section_headers.append(read_image_section_header(ff, section_addr))
             section_addr += 40
+        # TODO Check name. .text might not be the first entry!
         image_cor20_header = read_common_language_runtime_header(ff, image_section_headers[0].PointerToRawData + 8)
-        # TODO: Parse out Strong Signatures.
-        # TODO: Can StrongName Signatures be used to group samples?
+        
+        # TO  add check if StrongNameSignature is present
+        # parse out StrongNameSignature
+        signature_file_offset = image_section_headers[0].PointerToRawData - image_section_headers[0].VirtualAddress +\
+                                image_cor20_header.StrongNameSignature.VirtualAddress
+        print hex(signature_file_offset)
+        strong_name_signature = ff[signature_file_offset : signature_file_offset + image_cor20_header.StrongNameSignature.Size]
         if image_optional_header:
             if True is not None:
                 # .text section is the first section
@@ -743,8 +750,8 @@ def run(ff):
 
 
 # main 
-f = open("Challenge1.ex_", 'rb')
-g = open("CrackMe4-Signed.ex_", "rb")
+f = open(r"test_bins\System.Reflection.context.dll", 'rb')
+g = open(r"test_bins\CrackMe4-Signed.ex_", "rb")
 d = f.read()
 h = g.read()
 run(d)
