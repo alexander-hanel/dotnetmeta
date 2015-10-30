@@ -681,15 +681,16 @@ def read_metadata_table_stream_header(cur_addr, pe_data):
     return mtsh
 
 
-def create_metadata_table(mtsh):
+def create_metadata_table(mtsh, optimized):
     # mtsh instance of METADATA_TABLE_STREAM_HEADER
     ms = METADATA_SCHEME()
     bits = bin(mtsh.MaskValid)[::-1][:-2]
     table_values = [i for i, ltr in enumerate(bits) if ltr == "1"]
-    # TODO: check stream name
     for index, table in enumerate(mtsh._table_values):
-        if ms.check_if_present(table) == False:
-            table += 1
+        # Some tables do not exist in optimized metadata, if the table value is present go to the next table
+        if optimized:
+            if ms.check_if_present(table) is False:
+                table += 1
         ms.scheme.append((ms.metadata_table_names[table], table, mtsh.Rows[index]))
     return ms
 
@@ -720,31 +721,36 @@ def run(ff):
             section_addr += 40
         # TODO Check name. .text might not be the first entry!
         image_cor20_header = read_common_language_runtime_header(ff, image_section_headers[0].PointerToRawData + 8)
-        
-        # TO  add check if StrongNameSignature is present
+        # TODO  add check if StrongNameSignature is present
         # parse out StrongNameSignature
         signature_file_offset = image_section_headers[0].PointerToRawData - image_section_headers[0].VirtualAddress +\
                                 image_cor20_header.StrongNameSignature.VirtualAddress
-        print hex(signature_file_offset)
         strong_name_signature = ff[signature_file_offset : signature_file_offset + image_cor20_header.StrongNameSignature.Size]
         if image_optional_header:
+            # TODO below....
             if True is not None:
                 # .text section is the first section
-                meta_header_offset = image_section_headers[0].PointerToRawData - image_section_headers[0].VirtualAddress + image_cor20_header.MetaData.VirtualAddress
+                meta_header_offset = image_section_headers[0].PointerToRawData - image_section_headers[0].VirtualAddress \
+                                     + image_cor20_header.MetaData.VirtualAddress
                 mh = read_metadata_header(meta_header_offset, ff)
                 if mh is None:
                     print "Metadata signature not found"
-                    return
-                elif mh is None:
-                    return
+                    return None
                 for stream in mh.StreamHeaders:
                     # TODO: remove debug print
-                    print stream.name, hex(stream.size), hex(stream.offset + mh.offset)
+                     #print stream.name, hex(stream.size), hex(stream.offset + mh.offset)
                     if "#~" in stream.name or "#-" in stream.name:
+                        # #~: A compressed (optimized) metadata stream. This stream contains an optimized system of
+                        # metadata tables.
+                        # #-: An uncompressed (unoptimized) metadata stream
+                        optimized = False
+                        if "#~" in stream.name:
+                            optimized = True
                         metadata_table_stream_header = read_metadata_table_stream_header(stream.offset + mh.offset, ff)
-                        metadata_scheme = create_metadata_table(metadata_table_stream_header)
+                        metadata_scheme = create_metadata_table(metadata_table_stream_header, optimized)
                         for scheme in metadata_scheme.scheme:
                             print scheme
+                        print hex(metadata_table_stream_header._end)
 
 
 
