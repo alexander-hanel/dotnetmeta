@@ -2,8 +2,7 @@ import struct
 
 """
 Reads
-    http://resources.infosecinstitute.com/dot-net-assemblies-and-strong-name-signature/
-    http://ntcore.com/files/dotnetformat.htm
+c    http://ntcore.com/files/dotnetformat.htm
     https://codingwithspike.wordpress.com/2012/09/01/building-a-net-disassembler-part-4-reading-the-metadata-tables-in-the-stream/
     http://www.visualcplusdotnet.com/visualcplusdotnet5a.html
     https://www.simple-talk.com/blogs/2011/03/21/anatomy-of-a-net-assembly-clr-metadata-3/
@@ -113,7 +112,7 @@ class MetaDataHeader:
 
 class IMAGE_COR20_HEADER:
     def __init__(self):
-        # Header versioning
+        # Header version
         self.cb = None  # DWORD, offset 0
         self.MajorRunTimeVersion = None  # WORD, offset 4
         self.MinorRunTimeVersion = None  # WORD, offset 6
@@ -266,8 +265,9 @@ class METADATA_SCHEME():
 
 class COLUMNS:
     def __init__(self):
-        self. test = {
-            "Module": [("Generation", "USHORT"), ("Name", "STRING"),("Mvid", "GUID"), ("EncId", "GUID"), ("EncBaseId", "GUID")],
+        self.tables = {
+            "Module": [("Generation", "USHORT"), ("Name", "STRING"),("Mvid", "GUID"), ("EncId", "GUID"),
+                       ("EncBaseId", "GUID")],
             # TODO resolutionscope
             "TypeRef": [("ResolutionScope", "RESOLUTIONSCOPE" ), ("Name", "STRING"), ("NameSpace", "STRING") ],
             "TypeDef": [("Flags", "ULONG"), ("Name", "STRING"), ("Namespace", "STRING"), ("Extends", "TypeDefOrRef"),
@@ -275,7 +275,8 @@ class COLUMNS:
             "FieldPtr": [("Field", "RID")],
             "Field": [("Flags", "USHORT"), ("Name", "STRING"), ("Signature", "BLOB")],
             "MethodPtr": [("Method", "RID")],
-            "MethodDef": [("RVA", "ULONG"), ("ImplFlags", "USHORT"), ("Flags", "USHORT"), ("Name", "STRING"), ("Signature", "BLOB"),
+            "MethodDef": [("RVA", "ULONG"), ("ImplFlags", "USHORT"), ("Flags", "USHORT"), ("Name", "STRING"),
+                          ("Signature", "BLOB"),
                            ("ParamList", "RID")],
             "ParamPtr": [("Param", "RID")],
             "Param": [("Flags", "USHORT"), ("Sequence", "USHORT"), ("Name", "STRING")],
@@ -298,27 +299,33 @@ class COLUMNS:
             "MethodImpl": [("Class", "RID"), ("MethodBody", "MethodDefOrRef"), ("MethodDeclaration", "MethodDefOrRef")],
             "ModuleRef": [("Name", "STRING")],
             "TypeSpec": [("Signature", "BLOB")],
-            "ImplMap": [("MappingFlags", "USHORT" ), ("MemberForwarded", "MemberForwarded"), ("ImportName", "STRING" ), ("ImportScope", "RID" )],
+            "ImplMap": [("MappingFlags", "USHORT" ), ("MemberForwarded", "MemberForwarded"), ("ImportName", "STRING" ),
+                        ("ImportScope", "RID" )],
             "FieldRVA": [("RVA", "ULONG" ), ("Field", "RID")],
             "ENCLog": [("Token", "ULONG" ), ("FuncCode", "ULONG")],
             "ENCMap": [("Token", "ULONG" )],
             "Assembly": [("HashAlgId", "ULONG"), ("MajorVersion", "USHORT"), ("MinorVersion", "USHORT"),
-                                      ("RevisionNumber", "USHORT"), ("Flags", "ULONG"), ("PublicKey", "BLOB"), ("Name", "STRING"),
+                                      ("RevisionNumber", "USHORT"), ("Flags", "ULONG"), ("PublicKey", "BLOB"),
+                         ("Name", "STRING"),
                                       ("Culture", "STRING")],
             "AssemblyProcessor": [("Processor", "ULONG")],
             "AssemblyOS": [("OSPlatformID", "ULONG"), ("OSMajorVersion", "ULONG"), ("OSMinorVersion", "ULONG6")],
             "AssemblyRef"  : [("MajorVersion", "WORD"), ("MinorVersion", "WORD"), ("BuildNumber","WORD"),
-                                         ("RevisionNumber", "WORD"), ("Flags", "DWORD"), ("PublicKeyOrToken", "BLOB"), ("Name", "STRING"),
+                                         ("RevisionNumber", "WORD"), ("Flags", "DWORD"), ("PublicKeyOrToken", "BLOB"),
+                              ("Name", "STRING"),
                                          ("Name", "STRING"), ("Culture", "STRING"), ("HashValue", "BLOB")],
             "AssemblyRefProcessor": [("Processor", "DWORD"), ("RID", "AssemblyRef")],
             "AssemblyRefOS": [("OSPlatformId", "DWORD"),("OSMajorVersion", "DWORD"), ("OSMinorVersion", "DWORD"),
                                            ("AssemblyRef", "AssemblyRef")],
             "File": [("Flags", "ULONG" ), ("Name", "STRING"), ("HashValue", "BLOB")],
-            "ExportedType":[ ("Flags", "ULONG" ), ("TypeDefId", "ULONG"), ("TypeName", "STRING"), ("TypeNamespace", "STRING"),
+            "ExportedType":[ ("Flags", "ULONG" ), ("TypeDefId", "ULONG"), ("TypeName", "STRING"),
+                             ("TypeNamespace", "STRING"),
                               ("Implementation", "Implementation")],
-            "ManifestResource": [("Offset", "ULONG" ), ("Flags", "ULONG"), ("Name", "STRING" ), ("Implementation", "Implementation")],
+            "ManifestResource": [("Offset", "ULONG" ), ("Flags", "ULONG"), ("Name", "STRING" ),
+                                 ("Implementation", "Implementation")],
             "NestedClass": [("NestedClass", "RID" ), ("EnclosingClass", "RID")],
-            "GenericParam": [("Number", "USHORT" ), ("Flags", "USHORT"), ("Owner", "TypeOrMethodDef"), ("Name", "STRING")],
+            "GenericParam": [("Number", "USHORT" ), ("Flags", "USHORT"), ("Owner", "TypeOrMethodDef"),
+                             ("Name", "STRING")],
             "MethodSpec": [("Method", "MethodDefOrRef" ), ("Instantiation", "Blob")],
             "GenericParamConstraint": [("Owner", "Rid" ), ("Constraint", "TypeDefOrRef")]
         }
@@ -648,7 +655,9 @@ def read_metadata_header(cur_addr ,data):
 
 
 def get_metadata_scheme(offset, optimized=True ):
-    pass
+    columns = COLUMNS()
+    for x in columns.tables:
+        print columns.tables[x]
 
 def read_metadata_table_stream_header(cur_addr, pe_data):
     mtsh = METADATA_TABLE_STREAM_HEADER()
@@ -725,7 +734,9 @@ def run(ff):
         # parse out StrongNameSignature
         signature_file_offset = image_section_headers[0].PointerToRawData - image_section_headers[0].VirtualAddress +\
                                 image_cor20_header.StrongNameSignature.VirtualAddress
-        strong_name_signature = ff[signature_file_offset : signature_file_offset + image_cor20_header.StrongNameSignature.Size]
+        strong_name_signature = []
+        for byte in ff[signature_file_offset : signature_file_offset + image_cor20_header.StrongNameSignature.Size]:
+            strong_name_signature.append(byte)
         if image_optional_header:
             # TODO below....
             if True is not None:
@@ -751,9 +762,7 @@ def run(ff):
                         for scheme in metadata_scheme.scheme:
                             print scheme
                         print hex(metadata_table_stream_header._end)
-
-
-
+        get_metadata_scheme(0,0)
 
 # main 
 f = open(r"test_bins\System.Reflection.context.dll", 'rb')
